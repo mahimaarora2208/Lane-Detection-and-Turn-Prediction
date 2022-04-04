@@ -6,15 +6,12 @@ Straight Lane Detection
 
 import cv2 
 import numpy as np
-blue = (255, 0, 0)
+
 red = (0, 0, 255)
 green = (0, 255, 0)
-# Obtain frame size information using get() method
-
-
 cap = cv2.VideoCapture('whiteline.mp4')
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
-out = cv2.VideoWriter('output/prob2_output.mp4',fourcc, 20.0, (1150, 650))
+out = cv2.VideoWriter('lane_detection_video.avi',fourcc, 20.0, (960, 540))
 
 
 def slope_of_lane(x1, y1, x2, y2):
@@ -57,11 +54,11 @@ while cap.isOpened():
                     cv2.line(frame, (x1, y1),(x2, y2), red, 2) # green --> dashed --> length is less than a threshold
                 else:
                     print('length is invalid. Ignore points and Continue...')
-                    continue     
-            cv2.warpPerspective()    
+                    continue      
             cv2.imshow('lanes_detected', frame)
-            out.write(frame)  
-        key = cv2.waitKey(25) # waiting 25 ms
+            out.write(frame) 
+            # print(frame.shape)
+        key = cv2.waitKey(25)
         if key == 27:
            break
     else:

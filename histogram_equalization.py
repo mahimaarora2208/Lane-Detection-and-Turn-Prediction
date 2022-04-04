@@ -59,7 +59,7 @@ def main():
     file_dir = "./data_1/" # contains image frames
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
     out = cv2.VideoWriter('histogram_equalization_video.avi',fourcc, 20.0, (1224, 370), isColor = False)
-    out1 = cv2.VideoWriter('adaptive_histogram_equalization_video.avi',fourcc, 20.0, (1224, 370), isColor = False)
+    # out1 = cv2.VideoWriter('adaptive_histogram_equalization_video.avi',fourcc, 20.0, (1224, 370), isColor = False)
     data = [x for x in os.listdir(file_dir) if x.endswith('.png')]
     # for sorting the file names properly
     data.sort()
@@ -77,7 +77,7 @@ def main():
         adap_histogram_eq = adaptive_equalization(gray_img, 9)
         cv2.imshow('Adaptive Histogram Equalisation', adap_histogram_eq)
         out.write(histogram_eq)
-        out1.write(adap_histogram_eq)
+        # out1.write(adap_histogram_eq)
         # print(histogram_eq.shape)
         if cv2.waitKey(30) & 0xFF == ord("q"):
             break

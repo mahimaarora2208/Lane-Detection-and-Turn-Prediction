@@ -1,5 +1,6 @@
 '''
 problem 3 : turn prediction
+author: Mahima Arora
 '''
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
@@ -47,7 +48,6 @@ def get_lanes(img):
     # Combine both for getting lanes
     yellow_white_lane = cv2.bitwise_or(yellow_lane, white_lane)
     img = cv2.cvtColor(yellow_white_lane, cv2.COLOR_HLS2BGR)
-    cv2.imshow('masked(2)',img)
     return img
 
 
@@ -123,7 +123,6 @@ def lane_operations(warp):
 
     img[nonzero_y[left_lane], nonzero_x[left_lane]] = yellow_color
     img[nonzero_y[right_lane], nonzero_x[right_lane]] = red_color
-    # cv2.imshow('img', img)
     return img, left_x, left_y, right_x, right_y, turn
 
 
@@ -132,7 +131,7 @@ def poly_fit(img, left_x, left_y, right_x, right_y):
     left_fit = np.polyfit(left_y, left_x, 2)
     right_fit = np.polyfit(right_y, right_x, 2)
     curvature = measure_curvature(left_fit, right_fit)
-    
+
     print('=========================RADIUS OF CURVATURE =========================\n')
     print('left radius of curvature', curvature[0])
     print('right radius of curvature',  curvature[1], '\n')
@@ -181,7 +180,7 @@ def main():
                             (1100, 720),
                             (1100, 0)])
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('turn_prediction_video.avi',fourcc, 20.0, (1280, 720))
+    out = cv2.VideoWriter('warped_video.avi',fourcc, 20.0, (1280, 720))
     if not cap.isOpened():
         print("Error")
     while cap.isOpened():
@@ -217,12 +216,10 @@ def main():
             # Unwarp the image
             h_inv = np.linalg.inv(h)
             lane_detect_img = cv2.warpPerspective(lane_detect_img, h_inv, (width, height))
-
             final_img = cv2.addWeighted(np.uint8(frame), 1, np.uint8(lane_detect_img), 0.5, 0)
-
             cv2.putText(final_img, turn, (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.5, red_color, 2, cv2.LINE_AA)
             cv2.imshow('final output', final_img)
-            out.write(final_img)
+            out.write(warp)
             if cv2.waitKey(30) & 0xFF == ord("q"):
                 break
         else:
