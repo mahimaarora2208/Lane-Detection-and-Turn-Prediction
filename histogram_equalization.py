@@ -16,84 +16,89 @@ histogram equalization and adaptive histogram equalization and compare the resul
 #!/usr/bin/env python
 
 
+import time
 import cv2
 import numpy as np
+import os
 from matplotlib import pyplot as plt
 
-def histogram_img(img):
-    pass
 
-def cumulative_sum():
-    pass
-
-
-# img = cv2.imread('data_1/0000000000.png',0)
-img = cv2.imread('clahe_2.jpg',0)
-hist,bins = np.histogram(img.flatten(),256,[0,256])
- 
-cdf = hist.cumsum()
-cdf_normalized = cdf * hist.max()/ cdf.max()
-
-plt.plot(cdf_normalized, color = 'b')
-plt.hist(img.flatten(),256,[0,256], color = 'r')
-plt.xlim([0,256])
-plt.legend(('cdf','histogram'), loc = 'upper left')
-plt.show()
-
-cdf_m = np.ma.masked_equal(cdf,0)
-cdf_m = (cdf_m - cdf_m.min())*255/(cdf_m.max()-cdf_m.min())
-cdf = np.ma.filled(cdf_m,0).astype('uint8')
-
-img2 = cdf[img]
-# cv2.imwrite('clahe_2.jpg',img2)
-# def adjust_gamma(image, gamma=1.0):
-#     # build a lookup table mapping the pixel values [0, 255] to
-#     # their adjusted gamma values
-#     invGamma = 1.0 / gamma
-#     table = np.array([((i / 255.0) ** invGamma) * 255
-#                       for i in np.arange(0, 256)]).astype("uint8")
-#     # apply gamma correction using the lookup table
-#     return cv2.LUT(image, table)
+def cumulative_sum(hist):
+    hist = iter(hist)
+    b = [next(hist)]
+    for x in hist:
+        b.append(b[-1] + x)
+    return np.array(b)
 
 
-# def main():
- 
-#     # cap = cv2.VideoCapture('./Night Drive - 2689.mp4')
-#     a = np.zeros((256,),dtype=np.float16)
-#     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-#     out = cv2.VideoWriter('Night_Drive_improved.avi', fourcc, 20.0, (1920, 1080))
-#     # if not cap.isOpened():
-#         # print("Error")
-#     # while cap.isOpened():
-#         # ret, frame = cap.read()
-#         if ret:
-#             height, width, _ = frame.shape
-#             blur = cv2.GaussianBlur(frame, (7, 7), 0)
-#             # Convert the color image to HSV, in order to apply histogram equalization method to the "V" channel
-#             hsv = cv2.cvtColor(blur, cv2.COLOR_BGR2HSV)
-#             # Instantiate the CLAHE algorithm using cv2.createCLAHE()
-#             clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(16, 16))
-#             # Call the .apply method on the CLAHE object to apply histogram equalization
-#             clahe_img = clahe.apply(hsv[:, :, 2])
-            
-#             gamma_img = adjust_gamma(clahe_img, 1.0)
-#             hsv[:, :, 2] = gamma_img
-
-#             processed_img = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+def histogram_equalization(img, bins):
+    img_arr = np.asarray(img)
+    flat = img_arr.flatten()
+    hist = np.zeros(bins)
+    # loop through each pixel to count intensity
+    for pixel in flat:
+        hist[pixel] += 1 
+    hist = cumulative_sum(hist) 
+    hist = hist / hist[-1] # to convert values between 0 to 1
+    for x in range(img.shape[0]):
+        for y in range(img.shape[1]):
+            img[x, y] = 255 * hist[img[x, y]]
+    return img
 
 
-#             # showing the image
-#             cv2.imshow('improved_image', processed_img)
-#             out.write(processed_img)
-#             if cv2.waitKey(30) & 0xFF == ord("q"):
-#                 break
-#         else:
-#             break
-
-#     cap.release()
-#     out.release()
-#     cv2.destroyAllWindows()
+def adaptive_equalization(img, tilesize):
+    new_img = np.zeros_like(img)
+    for x in range(0, img.shape[0], tilesize): 
+        for y in range(0, img.shape[1], tilesize):
+            new_img[x : x + tilesize, y : y + tilesize] = histogram_equalization(img[x : x + tilesize, y : y + tilesize], 256)
+    return new_img
 
 
-# if __name__ == '__main__':
-#     main()
+
+def main():
+    file_dir = "./data_1/" # contains image frames
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter('histogram_equalization_video.avi',fourcc, 20.0, (1224, 370), isColor = False)
+    out1 = cv2.VideoWriter('adaptive_histogram_equalization_video.avi',fourcc, 20.0, (1224, 370), isColor = False)
+    data = [x for x in os.listdir(file_dir) if x.endswith('.png')]
+    # for sorting the file names properly
+    data.sort()
+    for file in data:
+        filename = file_dir + file
+        frame = cv2.imread(filename)
+        cv2.imshow('input frame', frame)
+        gray_img = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        histogram_eq = histogram_equalization(gray_img, 256)
+        cv2.imshow('Histogram Equalisation ', histogram_eq)
+        # clahe = cv2.createCLAHE(clipLimit=4.0, tileGridSize=(16, 16))
+        # clahe_img_1 = clahe.apply(gray_img)
+        # converted_img = cv2.cvtColor(gray_img, cv2.COLOR_GRAY2BGR)
+        # cv2.imwrite('image_3.png', dst)
+        adap_histogram_eq = adaptive_equalization(gray_img, 9)
+        cv2.imshow('Adaptive Histogram Equalisation', adap_histogram_eq)
+        out.write(histogram_eq)
+        out1.write(adap_histogram_eq)
+        # print(histogram_eq.shape)
+        if cv2.waitKey(30) & 0xFF == ord("q"):
+            break
+    else:
+        exit()  
+
+    out.release()
+    time.sleep(2)
+    cv2.destroyAllWindows()
+        # hsv_img = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        # ycrcb_img = cv2.cvtColor(frame, cv2.COLOR_BGR2YCR_CB)
+        # hsv_planes = cv2.split(ycrcb_img)
+        # hsv_planes[0] = histogram_equalization(hsv_planes[0], 256)
+        # hsv_planes[1] = histogram_equalization(hsv_planes[1], 256)
+        # hsv_planes[2] = histogram_equalization(hsv_planes[2], 256)
+        # hsv_merge = cv2.merge(hsv_planes)
+        # histogram_eq = cv2.cvtColor(hsv_merge, cv2.COLOR_HSV2BGR)
+        # new_ycrcb_img = cv2.cvtColor(hsv_merge, cv2.COLOR_YCR_CB2BGR)
+        # histogram_eq = histogram_equalization(hsv_img, 256)
+
+      
+    
+if __name__ == '__main__':
+    main()
