@@ -1,4 +1,4 @@
-# Lane-Detection-and-Turn-Predeiction
+# Lane-Detection-and-Turn-Prediction
 This project contains the implementation of detecting lanes for autonomous cars as well as predicting turns with efficiency. 
 
 <h3> histogram_equalization </h3>
