@@ -180,7 +180,7 @@ def main():
                             (1100, 720),
                             (1100, 0)])
     fourcc = cv2.VideoWriter_fourcc(*'XVID')
-    out = cv2.VideoWriter('warped_video.avi',fourcc, 20.0, (1280, 720))
+    out = cv2.VideoWriter('turn_prediction_video.avi',fourcc, 20.0, (1280, 720))
     if not cap.isOpened():
         print("Error")
     while cap.isOpened():
@@ -196,6 +196,7 @@ def main():
             img_edge = cv2.Canny(img_blur, 100, 200)
             h, _ = cv2.findHomography(src_pts, dst_pts)
             warp = cv2.warpPerspective(img_edge, h, (width, height))
+            cv2.imshow('masked(2)', extract_lane_img)
             cv2.imshow('warped(3)', warp)
             img, left_x, left_y, right_x, right_y, turn = lane_operations(warp)
            
@@ -219,7 +220,7 @@ def main():
             final_img = cv2.addWeighted(np.uint8(frame), 1, np.uint8(lane_detect_img), 0.5, 0)
             cv2.putText(final_img, turn, (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.5, red_color, 2, cv2.LINE_AA)
             cv2.imshow('final output', final_img)
-            out.write(warp)
+            out.write(final_img)
             if cv2.waitKey(30) & 0xFF == ord("q"):
                 break
         else:
